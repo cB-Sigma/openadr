@@ -1,0 +1,76 @@
+openadr (OpenADR 2.0b, 2.0a and 3 messages, signatures, transports and clients, in Go)
+Copyright 2026 Abhinav Gautam
+
+This module is licensed under the Apache License, Version 2.0 (LICENSE).
+
+The code was written for SigmaM2M, a oneM2M platform, from the OpenADR
+specifications and the IETF and W3C documents listed in PROVENANCE.md.
+It contains no code from other projects. The source files that come
+from SigmaM2M carry no per-file copyright header, the convention of the
+code they come from; the copyright line above covers them. Files added
+for this module carry "Copyright 2026 Abhinav Gautam" and
+"SPDX-License-Identifier: Apache-2.0".
+
+Trademarks
+----------
+
+"OpenADR" is a trademark of the OpenADR Alliance. This module is not
+made, affiliated with, endorsed, certified or supported by the OpenADR
+Alliance; the name is used only to say which protocol it implements.
+
+OpenADR Alliance material
+-------------------------
+
+The OpenADR 2.0a and 2.0b profile specifications and schemas and the
+OpenADR 3.1.0 definition (OpenAPI YAML and documents) are copyright the
+OpenADR Alliance, all rights reserved. None of them is included in this
+module: element names, namespaces, response codes, paths, field names,
+enumerations and conformance rules are used as facts, in our own words
+with section and rule references. The XML schemas (oadr_20a.xsd,
+oadr_20b.xsd and the files they include) are not redistributable and
+are not here; oadr2b.LoadSchemas reads a copy the user supplies at run
+time, and the tests that need one take it from SIGMA_TEST_OPENADR_XSD_DIR
+or, in the interop module, copy OpenLEADR's copy out of its container
+into a temporary directory when they run.
+
+Dependencies
+------------
+
+github.com/beevik/etree        BSD-2-Clause (XML tree for signatures)
+github.com/russellhaering/goxmldsig
+                               Apache-2.0 (canonicalisation)
+github.com/jonboulle/clockwork Apache-2.0 (indirect, through goxmldsig)
+github.com/cB-Sigma/mdns       Apache-2.0, Copyright 2026 Abhinav Gautam
+                               (mDNS/DNS-SD responder and browser)
+golang.org/x/net               BSD-3-Clause (indirect, through mdns)
+golang.org/x/sys               BSD-3-Clause (indirect, through mdns)
+github.com/cB-Sigma/xsd        Apache-2.0, Copyright 2026 Abhinav Gautam
+                               (XML Schema validation)
+github.com/cB-Sigma/iotcrypto  Apache-2.0, Copyright 2026 Abhinav Gautam
+                               (sasl: SCRAM for XMPP)
+github.com/xdg-go/scram, github.com/xdg-go/stringprep, github.com/xdg-go/pbkdf2
+                               Apache-2.0 (indirect, through iotcrypto)
+golang.org/x/text              BSD-3-Clause (indirect)
+The Go standard library        BSD-3-Clause, Copyright The Go Authors
+
+Interop tests (interop/, a separate test-only module)
+-----------------------------------------------------
+
+interop/peer/openleadr/Dockerfile installs OpenLEADR 0.5.36
+(openleadr-python, Apache-2.0, Copyright 2020 Contributors to
+OpenLEADR) and its dependencies from PyPI into a python:3.12.10-slim
+image at test time. interop/peer/openleadr-rs/Dockerfile clones
+openleadr-rs at tag v0.2.6 (Apache-2.0 or MIT, Copyright (c) 2024
+Stichting ElaadNL and Contributors) and builds it at test time; the
+tests load openleadr-rs's own user fixtures from that image into a
+postgres:16 container. Nothing of either project is copied into this
+repository. interop/peer/openleadr/check.py and make.py are our own
+scripts that call OpenLEADR's functions.
+
+Test data
+---------
+
+VEN and VTN IDs, market contexts, URLs, keys and certificates in the
+tests and the examples are made-up demo values or are generated when
+the tests run. The client IDs and secrets in interop/oadr3_test.go are
+those of openleadr-rs's public test fixtures.
