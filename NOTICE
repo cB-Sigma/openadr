@@ -65,7 +65,23 @@ Stichting ElaadNL and Contributors) and builds it at test time; the
 tests load openleadr-rs's own user fixtures from that image into a
 postgres:16 container. Nothing of either project is copied into this
 repository. interop/peer/openleadr/check.py and make.py are our own
-scripts that call OpenLEADR's functions.
+scripts that call OpenLEADR's functions, and olr_ven.py and olr_vtn.py
+our own scripts that run OpenLEADR's VEN client and VTN.
+
+interop/peer/openleadr-rs-client/Dockerfile clones the same openleadr-rs
+commit and builds its client library and integration tests at test
+time; the tests run them against this module's VTN. Nothing of
+openleadr-rs is copied into this repository.
+
+The OpenADR 3 OpenAPI definitions (3.1.0 and 3.0.1, OpenADR Alliance)
+are fetched at test time from github.com/grid-coordination/openadr3-specification,
+a public copy of the Alliance's release, at a pinned commit and checked
+by SHA-256; they are not in this repository.
+
+The interop module also uses, in tests only:
+github.com/getkin/kin-openapi  MIT (OpenAPI request and answer checks)
+github.com/dlclark/regexp2     MIT (ECMAScript patterns of the definition)
+and their dependencies (listed in interop/go.sum).
 
 Test data
 ---------
@@ -73,4 +89,6 @@ Test data
 VEN and VTN IDs, market contexts, URLs, keys and certificates in the
 tests and the examples are made-up demo values or are generated when
 the tests run. The client IDs and secrets in interop/oadr3_test.go are
-those of openleadr-rs's public test fixtures.
+those of openleadr-rs's public test fixtures, and admin/admin in
+interop/oadr3_vtn_test.go is the login openleadr-rs's client tests use
+against a VTN given by URL.
