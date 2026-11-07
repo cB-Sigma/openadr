@@ -316,6 +316,47 @@ func TestTargetPrivacy(t *testing.T) {
 	}
 }
 
+// A read by ID names no targets (issue #1): a VEN reading a targeted
+// program or event sees it when it carries a target the VEN was granted,
+// with those targets shown; a VEN not granted any of its targets, or
+// without a ven object, is told it does not exist.
+func TestReadByIDWithoutTargets(t *testing.T) {
+	for _, typ := range []string{"programs", "events"} {
+		t.Run(typ, func(t *testing.T) {
+			f := newFixture(t, nil)
+			prog := f.must(f.bl, http.MethodPost, "/programs", program("group-a-flex", "group-a", "zone-1"), 201)
+			obj := prog
+			if typ == "events" {
+				open := f.must(f.bl, http.MethodPost, "/programs", program("open"), 201)
+				obj = f.must(f.bl, http.MethodPost, "/events", event(oadr3.Str(open, "id"), "e", "group-a", "zone-1"), 201)
+			}
+			path := "/" + typ + "/" + oadr3.Str(obj, "id")
+			// Before enrolment, and with a ven granted another target, not found.
+			f.must(f.v1, http.MethodGet, path, nil, 404)
+			va := f.must(f.bl, http.MethodPost, "/vens", oadr3.Object{"objectType": "BL_VEN_REQUEST", "venName": "a", "clientID": "ven-a", "targets": []string{"group-b"}}, 201)
+			f.must(f.v1, http.MethodGet, path, nil, 404)
+			f.must(f.bl, http.MethodPut, "/vens/"+oadr3.Str(va, "id"), oadr3.Object{"objectType": "BL_VEN_REQUEST", "venName": "a", "clientID": "ven-a", "targets": []string{"group-a"}}, 200)
+			// Granted group-a: found with no query, showing the granted target only.
+			if o, st := f.do(f.v1, http.MethodGet, path, nil, nil); st != 200 || fmt.Sprint(o["targets"]) != "[group-a]" {
+				t.Fatalf("ven-a reads %s: %d %v", path, st, o)
+			}
+			// Naming a target still narrows; a target it was not granted hides the object.
+			if o, st := f.do(f.v1, http.MethodGet, path, url.Values{"targets": {"group-a"}}, nil); st != 200 || fmt.Sprint(o["targets"]) != "[group-a]" {
+				t.Fatalf("ven-a reads %s by target: %d %v", path, st, o)
+			}
+			if _, st := f.do(f.v1, http.MethodGet, path, url.Values{"targets": {"zone-1"}}, nil); st != 404 {
+				t.Fatalf("ven-a reads %s by a target not granted: %d", path, st)
+			}
+			// Another VEN, granted nothing, and business logic.
+			f.must(f.v2, http.MethodPost, "/vens", oadr3.Object{"objectType": "VEN_VEN_REQUEST", "venName": "b"}, 201)
+			f.must(f.v2, http.MethodGet, path, nil, 404)
+			if o := f.must(f.bl, http.MethodGet, path, nil, 200); fmt.Sprint(o["targets"]) != "[group-a zone-1]" {
+				t.Fatalf("business logic reads %s: %v", path, o)
+			}
+		})
+	}
+}
+
 // VEN-owned objects (vens, resources, reports, subscriptions) are visible
 // only to their client and to business logic.
 func TestOwnedObjectPrivacy(t *testing.T) {
@@ -759,6 +800,9 @@ func TestVersion30(t *testing.T) {
 	l, _ = f.list(f.v1, "/programs", nil)
 	if len(l) != 1 {
 		t.Fatalf("3.0 VEN without targets: %v", l)
+	}
+	if o, st := f.do(f.v1, http.MethodGet, "/programs/"+oadr3.Str(p, "id"), nil, nil); st != 200 || fmt.Sprint(o["targets"]) != "[map[type:GROUP values:[gold]]]" {
+		t.Fatalf("3.0 VEN reads a targeted program by ID: %d %v", st, o)
 	}
 	f.must(f.v1, http.MethodPost, "/resources", oadr3.Object{"resourceName": "r", "venID": va["id"]}, 201)
 }

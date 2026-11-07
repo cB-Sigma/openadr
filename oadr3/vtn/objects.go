@@ -217,7 +217,8 @@ func (v *VTN) loadGrants(ctx context.Context) (*grants, error) {
 
 // view gives what p may see of o (programs and events read by a VEN show
 // only the targets it matched), or false. reqTargets are the targets the
-// reader named (in its query, or its subscription's targets).
+// reader named (in its search query, or its subscription's targets); on a
+// read by ID or a notification they are the targets the VEN was granted.
 func view(p *Principal, g *grants, typ string, o Object, reqTargets []string) (Object, bool) {
 	objTargets := strs(o["targets"])
 	switch typ {
@@ -337,7 +338,10 @@ func sortByPriority(l []Object) {
 }
 
 // readVisible gives one object p may see; an object it may not see is not
-// found.
+// found. A read by ID names no targets (the 3.0.1 and 3.1.0 definitions
+// give /programs/{id} and /events/{id} only the path parameter), so a VEN
+// sees a targeted program or event when it carries any target the VEN was
+// granted; targets, if a reader names some all the same, narrow that.
 func (v *VTN) readVisible(ctx context.Context, p *Principal, typ, id string, targets []string) (Object, error) {
 	v.mu.RLock()
 	defer v.mu.RUnlock()
@@ -350,6 +354,9 @@ func (v *VTN) readVisible(ctx context.Context, p *Principal, typ, id string, tar
 	g, err := v.loadGrants(ctx)
 	if err != nil {
 		return nil, err
+	}
+	if len(targets) == 0 && p != nil && !p.BL() && (typ == oadr3.TypeProgram || typ == oadr3.TypeEvent) {
+		targets = g.targets[p.ClientID]
 	}
 	x, ok := view(p, g, typ, o, targets)
 	if !ok {

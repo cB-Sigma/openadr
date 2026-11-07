@@ -499,6 +499,8 @@ func (v *VTN) readOne(w http.ResponseWriter, r *http.Request, c collection) {
 		return
 	}
 	id := r.PathValue("id")
+	// The definitions give these operations no query parameters; targets
+	// named all the same narrow what a VEN is shown (see readVisible).
 	var targets []string
 	if c.typ == oadr3.TypeProgram || c.typ == oadr3.TypeEvent {
 		qv := url.Values{}

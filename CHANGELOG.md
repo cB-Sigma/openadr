@@ -3,6 +3,17 @@
 All notable changes to this module. Versions follow semantic versioning;
 before v1 the API may change in minor versions.
 
+## Unreleased
+
+- Fix: `oadr3/vtn` gave a VEN 404 for a program or event targeted at it
+  when the VEN read it by ID (`GET /programs/{id}`, `GET /events/{id}`)
+  without a `targets` query parameter, which the 3.0.1 and 3.1.0
+  definitions do not give those operations. A VEN now sees such an object
+  when it carries a target business logic granted the VEN (through its
+  ven or resources), with those targets shown; an object targeted
+  elsewhere is still not found, and searches still filter by the targets
+  named. Reported by @boeboe (#1).
+
 ## v0.2.0 (2026-10-11)
 
 Additions only; the v0.1.0 API is unchanged.
