@@ -3,7 +3,7 @@
 All notable changes to this module. Versions follow semantic versioning;
 before v1 the API may change in minor versions.
 
-## Unreleased
+## v0.2.1 (2026-11-07)
 
 - Fix: `oadr3/vtn` gave a VEN 404 for a program or event targeted at it
   when the VEN read it by ID (`GET /programs/{id}`, `GET /events/{id}`)
